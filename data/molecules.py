@@ -128,7 +128,8 @@ def laplace_decomp(g, max_freqs):
 
     # Eigenvectors with numpy
     EigVals, EigVecs = np.linalg.eigh(L.toarray())
-    EigVals, EigVecs = EigVals[: max_freqs], EigVecs[:, :max_freqs]  # Keep up to the maximum desired number of frequencies
+    idx = EigVals.argsort()[:max_freqs]  # Keep up to the maximum desired number of frequencies
+    EigVals, EigVecs = EigVals[idx], np.real(EigVecs[:, idx])
 
     # Normalize and pad EigenVectors
     EigVecs = torch.from_numpy(EigVecs).float()
@@ -141,7 +142,7 @@ def laplace_decomp(g, max_freqs):
         
     
     #Save eigenvales and pad
-    EigVals = torch.from_numpy(np.sort(np.abs(np.real(EigVals)))) #Abs value is taken because numpy sometimes computes the first eigenvalue approaching 0 from the negative
+    EigVals = torch.from_numpy(np.abs(np.real(EigVals))) #Abs value is taken because numpy sometimes computes the first eigenvalue approaching 0 from the negative
     
     if n<max_freqs:
         EigVals = F.pad(EigVals, (0, max_freqs-n), value=float('nan')).unsqueeze(0)
@@ -225,8 +226,8 @@ class MoleculeDataset(torch.utils.data.Dataset):
 
 
     def collate(self, samples):
-        graphs, labels = map(list, zip(*samples))
-        labels = torch.tensor(np.array(labels)).unsqueeze(1)
+        graphs, labels = zip(*samples)
+        labels = torch.cat(labels).unsqueeze(1)
         batched_graph = dgl.batch(graphs)
 
         return batched_graph, labels
