@@ -27,6 +27,7 @@ def train_epoch(model, optimizer, device, data_loader, epoch, LPE):
             #random sign flipping
             sign_flip = torch.rand(batch_EigVecs.size(1)).to(device)
             sign_flip[sign_flip>=0.5] = 1.0; sign_flip[sign_flip<0.5] = -1.0
+            batch_EigVecs = batch_EigVecs * sign_flip.unsqueeze(0)
             
             batch_EigVals = batch_graphs.ndata['EigVals'].to(device)
             batch_scores = model.forward(batch_graphs, batch_x, batch_e, batch_EigVecs, batch_EigVals)
